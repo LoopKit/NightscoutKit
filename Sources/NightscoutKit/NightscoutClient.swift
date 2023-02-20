@@ -1,5 +1,5 @@
 //
-//  NightscoutUploader.swift
+//  NightscoutClient.swift
 //  RileyLink
 //
 //  Created by Pete Schwamb on 3/9/16.
@@ -8,34 +8,6 @@
 
 import Foundation
 
-public enum UploadError: LocalizedError {
-    case httpError(status: Int, body: String)
-    case missingTimezone
-    case invalidResponse(reason: String)
-    case unauthorized
-    case missingConfiguration
-    case invalidParameters
-    case unexpectedResult(description: String)
-    
-    public var errorDescription: String? {
-        switch self {
-        case .httpError(let status, let body):
-            return String(["HTTP Error", "Status Code: \(status)" ,"body: body: \(body)"].joined( separator: "\n"))
-        case .missingTimezone:
-            return "Missing Timezone"
-        case .invalidResponse(let reason):
-            return "Invalid Response: \(reason)"
-        case .unauthorized:
-            return "Unauthorized"
-        case .missingConfiguration:
-            return "Missing Nightscout Credentials"
-        case .invalidParameters:
-            return "Invalid parameters"
-        case .unexpectedResult(let description):
-            return "Unexpected Result: \(description)"
-        }
-    }
-}
 
 private enum Endpoint: String {
     case entries = "/api/v1/entries"
@@ -47,7 +19,7 @@ private enum Endpoint: String {
     case notifications = "/api/v2/notifications/loop"
 }
 
-public class NightscoutUploader {
+public class NightscoutClient {
 
     public var siteURL: URL
     public var apiSecret: String
@@ -60,7 +32,7 @@ public class NightscoutUploader {
 
     public var errorHandler: ((_ error: Error, _ context: String) -> Void)?
 
-    private var dataAccessQueue: DispatchQueue = DispatchQueue(label: "com.rileylink.NightscoutUploadKit.dataAccessQueue", qos: .utility)
+    private var dataAccessQueue: DispatchQueue = DispatchQueue(label: "com.loopkit.NightscoutKit.dataAccessQueue", qos: .utility)
 
     public init(siteURL: URL, APISecret: String) {
         self.siteURL = siteURL
