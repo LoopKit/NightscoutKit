@@ -22,7 +22,7 @@ private enum Endpoint: String {
 public class NightscoutClient {
 
     public var siteURL: URL
-    public var apiSecret: String
+    public var apiSecret: String?
     
     private(set) var entries = [GlucoseEntry]()
     private(set) var deviceStatuses = [[String: Any]]()
@@ -462,7 +462,9 @@ public class NightscoutClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue(apiSecret.sha1, forHTTPHeaderField: "api-secret")
+        if let apiSecret {
+            request.setValue(apiSecret.sha1, forHTTPHeaderField: "api-secret")
+        }
         
         do {
             if let json = json {
@@ -547,7 +549,9 @@ public class NightscoutClient {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue(apiSecret.sha1, forHTTPHeaderField: "api-secret")
+        if let apiSecret {
+            request.setValue(apiSecret.sha1, forHTTPHeaderField: "api-secret")
+        }
         
         let sendData = try JSONSerialization.data(withJSONObject: json, options: [])
         let (data, urlResponse) = try await URLSession.shared.upload(for: request, from: sendData)
@@ -639,7 +643,9 @@ public class NightscoutClient {
         
         request.setValue("application/json", forHTTPHeaderField:"Content-Type")
         request.setValue("application/json", forHTTPHeaderField:"Accept")
-        request.setValue(apiSecret.sha1, forHTTPHeaderField:"api-secret")
+        if let apiSecret {
+            request.setValue(apiSecret.sha1, forHTTPHeaderField:"api-secret")
+        }
         let task = URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) in
             if let error = error {
                 completion(error)
