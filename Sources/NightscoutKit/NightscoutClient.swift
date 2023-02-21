@@ -243,14 +243,22 @@ public class NightscoutClient {
         }
     }
 
-    public func fetchGlucose(dateInterval: DateInterval, maxCount: Int = 50, completion: @escaping (Result<[GlucoseEntry],Error>) -> Void) {
+    public func fetchGlucose(dateInterval: DateInterval, maxCount: Int? = nil, completion: @escaping (Result<[GlucoseEntry],Error>) -> Void) {
         var components = URLComponents(url: url(for: .entries)!, resolvingAgainstBaseURL: false)!
-        components.queryItems = [
+
+        var queryItems: [URLQueryItem] = [
             URLQueryItem(name: "find[dateString][$gte]", value: TimeFormat.timestampStrFromDate(dateInterval.start)),
-            URLQueryItem(name: "find[dateString][$lte]", value: TimeFormat.timestampStrFromDate(dateInterval.end)),
-            URLQueryItem(name: "count", value: String(maxCount))
+            URLQueryItem(name: "find[dateString][$lte]", value: TimeFormat.timestampStrFromDate(dateInterval.end))
         ]
+
+        if let maxCount {
+            queryItems.append(URLQueryItem(name: "count", value: String(maxCount)))
+        }
+
+        components.queryItems = queryItems
+
         if let url = components.url {
+            print("Fetching \(url)")
             getFromNS(url: url) { (result) in
                 switch result {
                 case .failure(let error):
