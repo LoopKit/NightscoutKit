@@ -34,7 +34,7 @@ public class NightscoutClient {
 
     private var dataAccessQueue: DispatchQueue = DispatchQueue(label: "com.loopkit.NightscoutKit.dataAccessQueue", qos: .utility)
 
-    public init(siteURL: URL, APISecret: String) {
+    public init(siteURL: URL, APISecret: String?) {
         self.siteURL = siteURL
         self.apiSecret = APISecret
     }

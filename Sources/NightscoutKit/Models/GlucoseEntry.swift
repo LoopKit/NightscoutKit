@@ -10,6 +10,11 @@ import Foundation
 public struct GlucoseEntry {
     typealias RawValue = [String: Any]
 
+    public enum Condition: String {
+        case belowRange
+        case aboveRange
+    }
+
     public enum GlucoseType: String {
         case meter
         case sensor
@@ -69,8 +74,19 @@ public struct GlucoseEntry {
     public let trend: GlucoseTrend?
     public let changeRate: Double?
     public let isCalibration: Bool?
+    public let condition: Condition?
 
-    public init(glucose: Double, date: Date, device: String?, glucoseType: GlucoseType = .sensor, trend: GlucoseTrend? = nil, changeRate: Double?, isCalibration: Bool? = false, id: String? = nil) {
+    public init(
+        glucose: Double,
+        date: Date,
+        device: String?,
+        glucoseType: GlucoseType = .sensor,
+        trend: GlucoseTrend? = nil,
+        changeRate: Double?,
+        isCalibration: Bool? = false,
+        condition: Condition? = nil,
+        id: String? = nil)
+    {
         self.glucose = glucose
         self.date = date
         self.device = device
@@ -78,6 +94,7 @@ public struct GlucoseEntry {
         self.trend = trend
         self.changeRate = changeRate
         self.isCalibration = isCalibration
+        self.condition = condition
         self.id = id
     }
 
@@ -99,9 +116,13 @@ public struct GlucoseEntry {
             representation["sgv"] = glucose
         }
 
-        if let trend = trend {
+        if let trend {
             representation["trend"] = trend.rawValue
             representation["direction"] = trend.direction
+        }
+
+        if let condition {
+            representation["condition"] = condition.rawValue
         }
 
         representation["trendRate"] = changeRate
@@ -142,6 +163,12 @@ public struct GlucoseEntry {
             self.glucoseType = .meter
         } else {
             return nil
+        }
+
+        if let rawCondition = rawValue["condition"] as? String {
+            self.condition = Condition(rawValue: rawCondition)
+        } else {
+            self.condition = nil
         }
 
         self.changeRate = rawValue["trendRate"] as? Double
