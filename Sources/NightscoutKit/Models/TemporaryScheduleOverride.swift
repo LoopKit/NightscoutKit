@@ -1,6 +1,6 @@
 //
 //  TemporaryScheduleOverride.swift
-//  NightscoutUploadKit
+//  NightscoutKit
 //
 //  Created by Pete Schwamb on 2/21/22.
 //  Copyright © 2022 LoopKit Authors. All rights reserved.

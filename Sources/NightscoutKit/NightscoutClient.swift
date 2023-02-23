@@ -162,7 +162,7 @@ public class NightscoutClient {
     
     // MARK: - Fetching
 
-    public func fetchCurrentProfile(completion: @escaping (Result<ProfileSet,Error>) -> Void) {
+    public func fetchCurrentProfile(completion: @escaping (Result<ProfileSet,NightscoutError>) -> Void) {
         let profileURL = url(for: .currentProfile)!
         getFromNS(url: profileURL) { (result) in
             switch result {
@@ -180,7 +180,7 @@ public class NightscoutClient {
         }
     }
 
-    public func fetchDeviceStatus(dateInterval: DateInterval, maxCount: Int = 50, completion: @escaping (Result<[DeviceStatus],Error>) -> Void) {
+    public func fetchDeviceStatus(dateInterval: DateInterval, maxCount: Int = 50, completion: @escaping (Result<[DeviceStatus],NightscoutError>) -> Void) {
         var components = URLComponents(url: url(for: .deviceStatus)!, resolvingAgainstBaseURL: false)!
         components.queryItems = [
             URLQueryItem(name: "find[created_at][$gte]", value: TimeFormat.timestampStrFromDate(dateInterval.start)),
@@ -212,7 +212,7 @@ public class NightscoutClient {
     }
 
 
-    public func fetchTreatments(dateInterval: DateInterval, maxCount: Int = 50, completion: @escaping (Result<[NightscoutTreatment],Error>) -> Void) {
+    public func fetchTreatments(dateInterval: DateInterval, maxCount: Int = 50, completion: @escaping (Result<[NightscoutTreatment],NightscoutError>) -> Void) {
         var components = URLComponents(url: url(for: .treatments)!, resolvingAgainstBaseURL: false)!
         components.queryItems = [
             URLQueryItem(name: "find[timestamp][$gte]", value: TimeFormat.timestampStrFromDate(dateInterval.start)),
@@ -243,7 +243,7 @@ public class NightscoutClient {
         }
     }
 
-    public func fetchGlucose(dateInterval: DateInterval, maxCount: Int? = nil, completion: @escaping (Result<[GlucoseEntry],Error>) -> Void) {
+    public func fetchGlucose(dateInterval: DateInterval, maxCount: Int? = nil, completion: @escaping (Result<[GlucoseEntry],NightscoutError>) -> Void) {
         var components = URLComponents(url: url(for: .entries)!, resolvingAgainstBaseURL: false)!
 
         var queryItems: [URLQueryItem] = [
@@ -459,38 +459,40 @@ public class NightscoutClient {
         }
     }
 
-    func getFromNS(url: URL, completion: @escaping (Result<Any,Error>) -> Void) {
+    func getFromNS(url: URL, completion: @escaping (Result<Any,NightscoutError>) -> Void) {
         callNS(nil, url: url, method: "GET") { (result) in
             completion(result)
         }
     }
 
-    func callNS(_ json: Any?, url:URL, method:String, completion: @escaping (Result<Any,Error>) -> Void) {
+    func callNS(_ json: Any?, url:URL, method:String, completion: @escaping (Result<Any,NightscoutError>) -> Void) {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        if let apiSecret {
+        if let apiSecret, !apiSecret.isEmpty {
             request.setValue(apiSecret.sha1, forHTTPHeaderField: "api-secret")
         }
         
         do {
             if let json = json {
-                let sendData = try JSONSerialization.data(withJSONObject: json, options: [])
+                guard let sendData = try? JSONSerialization.data(withJSONObject: json, options: []) else {
+                    completion(.failure(.invalidParameters))
+                    return
+                }
                 let task = URLSession.shared.uploadTask(with: request, from: sendData, completionHandler: { (data, response, error) in
                     if let error = error {
-                        completion(.failure(error))
+                        completion(.failure(.networkError(error: error)))
                         return
                     }
 
                     guard let httpResponse = response as? HTTPURLResponse else {
-                        completion(.failure(NightscoutError.invalidResponse(reason: "Response is not HTTPURLResponse")))
+                        completion(.failure(.invalidResponse(reason: "Response is not HTTPURLResponse")))
                         return
                     }
 
                     if httpResponse.statusCode != 200 {
-                        let error = NightscoutError.httpError(status: httpResponse.statusCode, body:String(data: data!, encoding: String.Encoding.utf8)!)
-                        completion(.failure(error))
+                        completion(.failure(NightscoutError(response: httpResponse, data: data)))
                         return
                     }
                     
@@ -503,7 +505,7 @@ public class NightscoutClient {
                         let json = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions())
                         completion(.success(json))
                     } catch {
-                        completion(.failure(error))
+                        completion(.failure(.invalidResponse(reason: "Invalid JSON")))
                         return
                     }
                 })
@@ -511,23 +513,22 @@ public class NightscoutClient {
             } else {
                 let task = URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) in
                     if let error = error {
-                        completion(.failure(error))
+                        completion(.failure(.networkError(error: error)))
                         return
                     }
 
                     guard let httpResponse = response as? HTTPURLResponse else {
-                        completion(.failure(NightscoutError.invalidResponse(reason: "Response is not HTTPURLResponse")))
+                        completion(.failure(.invalidResponse(reason: "Response is not HTTPURLResponse")))
                         return
                     }
 
                     if httpResponse.statusCode != 200 {
-                        let error = NightscoutError.httpError(status: httpResponse.statusCode, body:String(data: data!, encoding: String.Encoding.utf8)!)
-                        completion(.failure(error))
+                        completion(.failure(NightscoutError(response: httpResponse, data: data)))
                         return
                     }
 
                     guard let data = data else {
-                        completion(.failure(NightscoutError.invalidResponse(reason: "No data in response")))
+                        completion(.failure(.invalidResponse(reason: "No data in response")))
                         return
                     }
 
@@ -535,15 +536,12 @@ public class NightscoutClient {
                         let json = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions())
                         completion(.success(json))
                     } catch {
-                        completion(.failure(error))
+                        completion(.failure(.invalidResponse(reason: "Invalid JSON")))
                         return
                     }
                 })
                 task.resume()
             }
-
-        } catch let error {
-            completion(.failure(error))
         }
     }
     
@@ -641,7 +639,7 @@ public class NightscoutClient {
         }
     }
     
-    public func checkAuth(_ completion: @escaping (Error?) -> Void) {
+    public func checkAuth(_ completion: @escaping (NightscoutError?) -> Void) {
         guard let testURL = url(for: .authTest) else {
             completion(NightscoutError.missingConfiguration)
             return
@@ -656,17 +654,18 @@ public class NightscoutClient {
         }
         let task = URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) in
             if let error = error {
-                completion(error)
+                completion(.networkError(error: error))
                 return
             }
             
             if let httpResponse = response as? HTTPURLResponse ,
                 httpResponse.statusCode != 200 {
                     if httpResponse.statusCode == 401 {
-                        completion(NightscoutError.unauthorized)
+                        completion(.unauthorized)
+                    } else if let data, let body = String(data: data, encoding: String.Encoding.utf8) {
+                        completion(.httpError(status: httpResponse.statusCode, body: body))
                     } else {
-                        let error = NightscoutError.httpError(status: httpResponse.statusCode, body:String(data: data!, encoding: String.Encoding.utf8)!)
-                        completion(error)
+                        completion(.httpError(status: httpResponse.statusCode, body: "Unable to parse as utf8"))
                     }
             } else {
                 completion(nil)

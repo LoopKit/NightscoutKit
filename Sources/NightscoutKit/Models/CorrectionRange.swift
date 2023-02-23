@@ -1,6 +1,6 @@
 //
 //  CorrectionRange.swift
-//  NightscoutUploadKit
+//  NightscoutKit
 //
 //  Created by Pete Schwamb on 5/28/18.
 //  Copyright © 2018 LoopKit Authors. All rights reserved.

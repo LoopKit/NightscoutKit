@@ -16,6 +16,14 @@ public enum NightscoutError: LocalizedError {
     case invalidParameters
     case networkError(error: Error)
 
+    init(response: HTTPURLResponse, data: Data?) {
+        if let data, let body = String(data: data, encoding: String.Encoding.utf8) {
+            self = .httpError(status: response.statusCode, body: body)
+        } else {
+            self = .httpError(status: response.statusCode, body: "Response body is binary.")
+        }
+    }
+
     public var errorDescription: String? {
         switch self {
         case .httpError(let status, let body):

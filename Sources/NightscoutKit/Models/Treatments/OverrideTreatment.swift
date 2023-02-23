@@ -1,6 +1,6 @@
 //
 //  OverrideTreatment.swift
-//  NightscoutUploadKit
+//  NightscoutKit
 //
 //  Created by Pete Schwamb on 9/28/19.
 //  Copyright © 2019 LoopKit Authors. All rights reserved.

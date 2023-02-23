@@ -1,6 +1,6 @@
 //
 //  GlucoseEntry.swift
-//  NightscoutUploadKit
+//  NightscoutKit
 //
 //  Created by Pete Schwamb on 4/19/20.
 //  Copyright © 2020 LoopKit Authors. All rights reserved.

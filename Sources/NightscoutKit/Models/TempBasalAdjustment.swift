@@ -1,6 +1,6 @@
 //
 //  TempBasalAdjustment.swift
-//  NightscoutUploadKit
+//  NightscoutKit
 //
 //  Created by Pete Schwamb on 7/28/16.
 //  Copyright © 2016 LoopKit Authors. All rights reserved.

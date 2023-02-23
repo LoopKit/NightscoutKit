@@ -1,6 +1,6 @@
 //
 //  OverrideStatus.swift
-//  NightscoutUploadKit
+//  NightscoutKit
 //
 //  Created by Kenneth Stack on 5/6/19.
 //  Copyright © 2019 LoopKit Authors. All rights reserved.

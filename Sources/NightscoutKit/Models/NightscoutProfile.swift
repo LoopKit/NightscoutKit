@@ -1,6 +1,6 @@
 //
 //  NightscoutProfile.swift
-//  NightscoutUploadKit
+//  NightscoutKit
 //
 
 import Foundation

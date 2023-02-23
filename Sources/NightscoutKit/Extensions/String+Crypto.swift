@@ -1,6 +1,6 @@
 //
 //  String+Crypto.swift
-//  NightscoutUploadKit
+//  NightscoutKit
 //
 //  Created by Bill Gestrich on 1/7/23.
 //  Copyright © 2023 LoopKit Authors. All rights reserved.
