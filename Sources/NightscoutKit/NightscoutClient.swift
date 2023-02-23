@@ -34,9 +34,9 @@ public class NightscoutClient {
 
     private var dataAccessQueue: DispatchQueue = DispatchQueue(label: "com.loopkit.NightscoutKit.dataAccessQueue", qos: .utility)
 
-    public init(siteURL: URL, APISecret: String?) {
+    public init(siteURL: URL, apiSecret: String?) {
         self.siteURL = siteURL
-        self.apiSecret = APISecret
+        self.apiSecret = apiSecret
     }
 
     private func url(with path: String, queryItems: [URLQueryItem]? = nil) -> URL? {
@@ -60,7 +60,7 @@ public class NightscoutClient {
     /// - parameter completionHandler:    A closure to execute when the task completes. It has a single argument for any error that might have occurred during the upload.
     public func upload(_ treatments: [NightscoutTreatment], completionHandler: @escaping (Result<[String],Error>) -> Void) {
         guard let url = url(for: .treatments) else {
-            completionHandler(.failure(UploadError.missingConfiguration))
+            completionHandler(.failure(NightscoutError.missingConfiguration))
             return
         }
         postToNS(treatments.map { $0.dictionaryRepresentation }, url: url, completion: completionHandler)
@@ -72,7 +72,7 @@ public class NightscoutClient {
     /// - parameter completionHandler: A closure to execute when the task completes. It has a single argument for any error that might have occurred during the modify.
     public func modifyTreatments(_ treatments:[NightscoutTreatment], completionHandler: @escaping (Error?) -> Void) {
         guard let url = url(for: .treatments) else {
-            completionHandler(UploadError.missingConfiguration)
+            completionHandler(NightscoutError.missingConfiguration)
             return
         }
         dataAccessQueue.async {
@@ -171,7 +171,7 @@ public class NightscoutClient {
                 completion(.failure(error))
             case .success(let rawResponse):
                 guard let profileRaw = rawResponse as? ProfileSet.RawValue, let profileSet = ProfileSet(rawValue: profileRaw) else {
-                    completion(.failure(UploadError.invalidResponse(reason: "Expected nightscout profile")))
+                    completion(.failure(NightscoutError.invalidResponse(reason: "Expected nightscout profile")))
                     return
                 }
 
@@ -195,7 +195,7 @@ public class NightscoutClient {
                     completion(.failure(error))
                 case .success(let rawResponse):
                     guard let returnedEntries = rawResponse as? [DeviceStatus.RawValue] else {
-                        completion(.failure(UploadError.invalidResponse(reason: "Expected array of treatments")))
+                        completion(.failure(NightscoutError.invalidResponse(reason: "Expected array of treatments")))
                         return
                     }
 
@@ -207,7 +207,7 @@ public class NightscoutClient {
                 }
             }
         } else {
-            completion(.failure(UploadError.invalidParameters))
+            completion(.failure(NightscoutError.invalidParameters))
         }
     }
 
@@ -227,7 +227,7 @@ public class NightscoutClient {
                     completion(.failure(error))
                 case .success(let rawResponse):
                     guard let returnedEntries = rawResponse as? [[String: Any]] else {
-                        completion(.failure(UploadError.invalidResponse(reason: "Expected array of treatments")))
+                        completion(.failure(NightscoutError.invalidResponse(reason: "Expected array of treatments")))
                         return
                     }
 
@@ -239,7 +239,7 @@ public class NightscoutClient {
                 }
             }
         } else {
-            completion(.failure(UploadError.invalidParameters))
+            completion(.failure(NightscoutError.invalidParameters))
         }
     }
 
@@ -266,7 +266,7 @@ public class NightscoutClient {
                     completion(.failure(error))
                 case .success(let rawResponse):
                     guard let returnedEntries = rawResponse as? [GlucoseEntry.RawValue] else {
-                        completion(.failure(UploadError.invalidResponse(reason: "Expected array of glucose entries")))
+                        completion(.failure(NightscoutError.invalidResponse(reason: "Expected array of glucose entries")))
                         return
                     }
 
@@ -275,7 +275,7 @@ public class NightscoutClient {
                 }
             }
         } else {
-            completion(.failure(UploadError.invalidParameters))
+            completion(.failure(NightscoutError.invalidParameters))
         }
     }
     
@@ -336,7 +336,7 @@ public class NightscoutClient {
 
     public func postNotification(payload: [String: String]) async throws  {
         guard let url = url(for: .notifications) else {
-            throw UploadError.missingConfiguration
+            throw NightscoutError.missingConfiguration
         }
         
         let _ = try await postToNS(payload, url: url)
@@ -346,7 +346,7 @@ public class NightscoutClient {
 
     public func uploadProfile(profileSet: ProfileSet, completion: @escaping (Result<[String],Error>) -> Void)  {
         guard let url = url(for: .profile) else {
-            completion(.failure(UploadError.missingConfiguration))
+            completion(.failure(NightscoutError.missingConfiguration))
             return
         }
 
@@ -359,7 +359,7 @@ public class NightscoutClient {
 
     public func updateProfile(profileSet: ProfileSet, id: String, completion: @escaping (Error?) -> Void) {
         guard let url = url(for: .profile) else {
-            completion(UploadError.missingConfiguration)
+            completion(NightscoutError.missingConfiguration)
             return
         }
         
@@ -379,7 +379,7 @@ public class NightscoutClient {
     fileprivate func deleteFromNS(_ id: String, endpoint: Endpoint, completion: @escaping (Error?) -> Void)  {
         let resource = "\(endpoint.rawValue)/\(id)"
         guard let url = url(with: resource) else {
-            completion(UploadError.missingConfiguration)
+            completion(NightscoutError.missingConfiguration)
             return
         }
         
@@ -411,7 +411,7 @@ public class NightscoutClient {
         }
 
         guard let url = url(for: endpoint) else {
-            completion(.failure(UploadError.missingConfiguration))
+            completion(.failure(NightscoutError.missingConfiguration))
             return
         }
 
@@ -435,7 +435,7 @@ public class NightscoutClient {
             switch result {
             case .success(let postResponse):
                 guard let insertedEntries = postResponse as? [[String: Any]], insertedEntries.count == json.count else {
-                    completion(.failure(UploadError.invalidResponse(reason: "Expected array of \(json.count) objects in JSON response: \(postResponse)")))
+                    completion(.failure(NightscoutError.invalidResponse(reason: "Expected array of \(json.count) objects in JSON response: \(postResponse)")))
                     return
                 }
 
@@ -484,12 +484,12 @@ public class NightscoutClient {
                     }
 
                     guard let httpResponse = response as? HTTPURLResponse else {
-                        completion(.failure(UploadError.invalidResponse(reason: "Response is not HTTPURLResponse")))
+                        completion(.failure(NightscoutError.invalidResponse(reason: "Response is not HTTPURLResponse")))
                         return
                     }
 
                     if httpResponse.statusCode != 200 {
-                        let error = UploadError.httpError(status: httpResponse.statusCode, body:String(data: data!, encoding: String.Encoding.utf8)!)
+                        let error = NightscoutError.httpError(status: httpResponse.statusCode, body:String(data: data!, encoding: String.Encoding.utf8)!)
                         completion(.failure(error))
                         return
                     }
@@ -516,18 +516,18 @@ public class NightscoutClient {
                     }
 
                     guard let httpResponse = response as? HTTPURLResponse else {
-                        completion(.failure(UploadError.invalidResponse(reason: "Response is not HTTPURLResponse")))
+                        completion(.failure(NightscoutError.invalidResponse(reason: "Response is not HTTPURLResponse")))
                         return
                     }
 
                     if httpResponse.statusCode != 200 {
-                        let error = UploadError.httpError(status: httpResponse.statusCode, body:String(data: data!, encoding: String.Encoding.utf8)!)
+                        let error = NightscoutError.httpError(status: httpResponse.statusCode, body:String(data: data!, encoding: String.Encoding.utf8)!)
                         completion(.failure(error))
                         return
                     }
 
                     guard let data = data else {
-                        completion(.failure(UploadError.invalidResponse(reason: "No data in response")))
+                        completion(.failure(NightscoutError.invalidResponse(reason: "No data in response")))
                         return
                     }
 
@@ -565,11 +565,11 @@ public class NightscoutClient {
         let (data, urlResponse) = try await URLSession.shared.upload(for: request, from: sendData)
 
         guard let httpResponse = urlResponse as? HTTPURLResponse else {
-            throw UploadError.invalidResponse(reason: "Response is not HTTPURLResponse")
+            throw NightscoutError.invalidResponse(reason: "Response is not HTTPURLResponse")
         }
 
         if httpResponse.statusCode != 200 {
-            throw UploadError.httpError(status: httpResponse.statusCode, body:String(data: data, encoding: String.Encoding.utf8)!)
+            throw NightscoutError.httpError(status: httpResponse.statusCode, body:String(data: data, encoding: String.Encoding.utf8)!)
         }
         
         return data
@@ -643,7 +643,7 @@ public class NightscoutClient {
     
     public func checkAuth(_ completion: @escaping (Error?) -> Void) {
         guard let testURL = url(for: .authTest) else {
-            completion(UploadError.missingConfiguration)
+            completion(NightscoutError.missingConfiguration)
             return
         }
         
@@ -663,9 +663,9 @@ public class NightscoutClient {
             if let httpResponse = response as? HTTPURLResponse ,
                 httpResponse.statusCode != 200 {
                     if httpResponse.statusCode == 401 {
-                        completion(UploadError.unauthorized)
+                        completion(NightscoutError.unauthorized)
                     } else {
-                        let error = UploadError.httpError(status: httpResponse.statusCode, body:String(data: data!, encoding: String.Encoding.utf8)!)
+                        let error = NightscoutError.httpError(status: httpResponse.statusCode, body:String(data: data!, encoding: String.Encoding.utf8)!)
                         completion(error)
                     }
             } else {
