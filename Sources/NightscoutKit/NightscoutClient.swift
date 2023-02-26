@@ -180,6 +180,45 @@ public class NightscoutClient {
         }
     }
 
+    public func fetchProfiles(dateInterval: DateInterval, maxCount: Int? = nil, completion: @escaping (Result<[ProfileSet],NightscoutError>) -> Void) {
+        var components = URLComponents(url: url(for: .profile)!, resolvingAgainstBaseURL: false)!
+
+        var queryItems: [URLQueryItem] = [
+            URLQueryItem(name: "find[dateString][$gte]", value: TimeFormat.timestampStrFromDate(dateInterval.start)),
+            URLQueryItem(name: "find[dateString][$lte]", value: TimeFormat.timestampStrFromDate(dateInterval.end))
+        ]
+
+        if let maxCount {
+            queryItems.append(URLQueryItem(name: "count", value: String(maxCount)))
+        }
+
+        components.queryItems = queryItems
+
+        if let url = components.url {
+            getFromNS(url: url) { (result) in
+                switch result {
+                case .failure(let error):
+                    print("Error fetching profiles: \(error)")
+                    completion(.failure(error))
+                case .success(let rawResponse):
+                    guard let rawProfiles = rawResponse as? [ProfileSet.RawValue] else {
+                        completion(.failure(NightscoutError.invalidResponse(reason: "Expected array of nightscout profiles")))
+                        return
+                    }
+
+                    let profiles = rawProfiles.compactMap({ (rawProfile: ProfileSet.RawValue) -> ProfileSet? in
+                        ProfileSet(rawValue: rawProfile)
+                    })
+
+                    completion(.success(profiles))
+                }
+            }
+        } else {
+            completion(.failure(NightscoutError.invalidParameters))
+        }
+    }
+
+
     public func fetchDeviceStatus(dateInterval: DateInterval, maxCount: Int = 50, completion: @escaping (Result<[DeviceStatus],NightscoutError>) -> Void) {
         var components = URLComponents(url: url(for: .deviceStatus)!, resolvingAgainstBaseURL: false)!
         components.queryItems = [
@@ -258,7 +297,7 @@ public class NightscoutClient {
         components.queryItems = queryItems
 
         if let url = components.url {
-            print("Fetching \(url)")
+            //print("Fetching \(url)")
             getFromNS(url: url) { (result) in
                 switch result {
                 case .failure(let error):

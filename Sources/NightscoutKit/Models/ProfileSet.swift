@@ -1,5 +1,5 @@
 //
-//  NightscoutProfile.swift
+//  ProfileSet.swift
 //  NightscoutKit
 //
 
@@ -120,20 +120,22 @@ public class ProfileSet {
          }
     }
     
-    public let startDate : Date
+    public let startDate: Date
     public let units: String
     public let enteredBy: String
     public let defaultProfile: String
     public let store: ProfileStore
     public let settings: LoopSettings
+    public let syncIdentifier: String
     
-    public init(startDate: Date, units: String, enteredBy: String, defaultProfile: String, store: ProfileStore, settings: LoopSettings) {
+    public init(startDate: Date, units: String, enteredBy: String, defaultProfile: String, store: ProfileStore, settings: LoopSettings, syncIdentifier: String) {
         self.startDate = startDate
         self.units = units
         self.enteredBy = enteredBy
         self.defaultProfile = defaultProfile
         self.store = store
         self.settings = settings
+        self.syncIdentifier = syncIdentifier
     }
     
     public var dictionaryRepresentation: [String: Any] {
@@ -165,7 +167,8 @@ public class ProfileSet {
             let defaultProfile = rawValue["defaultProfile"] as? String,
             let storeRaw = rawValue["store"] as? ProfileStoreRawValue,
             let settingsRaw = rawValue["loopSettings"] as? LoopSettings.RawValue,
-            let settings = LoopSettings(rawValue: settingsRaw)
+            let settings = LoopSettings(rawValue: settingsRaw),
+            let syncIdentifier = rawValue["_id"] as? String
         else {
             return nil
         }
@@ -176,5 +179,6 @@ public class ProfileSet {
         self.defaultProfile = defaultProfile
         self.store = storeRaw.compactMapValues { Profile(rawValue: $0) }
         self.settings = settings
+        self.syncIdentifier = syncIdentifier
     }
 }
