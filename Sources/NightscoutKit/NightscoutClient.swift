@@ -536,7 +536,7 @@ public class NightscoutClient {
                     }
                     
                     guard let data = data, !data.isEmpty else {
-                        completion(.success([]))
+                        completion(.success(Array<Any>()))
                         return
                     }
 
