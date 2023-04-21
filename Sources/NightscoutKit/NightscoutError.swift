@@ -27,7 +27,7 @@ public enum NightscoutError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .httpError(let status, let body):
-            return String(format: LocalizedString("HTTP Error\nStatus Code: %1$@\nbody: %2$@", comment: "errorDescription format string for NightscoutError.httpError (1: http status code) (2: http body for error)"), status, body)
+            return String(format: LocalizedString("HTTP Error\nStatus Code: %1$@\nbody: %2$@", comment: "errorDescription format string for NightscoutError.httpError (1: http status code) (2: http body for error)"), String(describing: status), body)
         case .missingTimezone:
             return LocalizedString("Missing Timezone", comment: "errorDescription for NightscoutError.missingTimezone")
         case .invalidResponse(let reason):
