@@ -64,12 +64,12 @@ public class NightscoutTreatment: DictionaryRepresentable {
     }
     
     public let timestamp: Date
-    let enteredBy: String
-    let notes: String?
-    let id: String?
-    let eventType: TreatmentType
-    let syncIdentifier: String?
-    let insulinType: String?
+    public let enteredBy: String
+    public let notes: String?
+    public let id: String?
+    public let eventType: TreatmentType
+    public let syncIdentifier: String?
+    public let insulinType: String?
 
 
     public init(timestamp: Date, enteredBy: String, notes: String? = nil, id: String? = nil, eventType: TreatmentType, syncIdentifier: String? = nil, insulinType: String? = nil) {
