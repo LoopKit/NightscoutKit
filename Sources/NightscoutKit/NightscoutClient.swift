@@ -219,13 +219,18 @@ public class NightscoutClient {
     }
 
 
-    public func fetchDeviceStatus(dateInterval: DateInterval, maxCount: Int = 50, completion: @escaping (Result<[DeviceStatus],NightscoutError>) -> Void) {
+    public func fetchDeviceStatus(dateInterval: DateInterval, maxCount: Int? = nil, completion: @escaping (Result<[DeviceStatus],NightscoutError>) -> Void) {
         var components = URLComponents(url: url(for: .deviceStatus)!, resolvingAgainstBaseURL: false)!
-        components.queryItems = [
+        var queryItems: [URLQueryItem] = [
             URLQueryItem(name: "find[created_at][$gte]", value: TimeFormat.timestampStrFromDate(dateInterval.start)),
-            URLQueryItem(name: "find[created_at][$lte]", value: TimeFormat.timestampStrFromDate(dateInterval.end)),
-            URLQueryItem(name: "count", value: String(maxCount))
+            URLQueryItem(name: "find[created_at][$lte]", value: TimeFormat.timestampStrFromDate(dateInterval.end))
         ]
+
+        if let maxCount {
+            queryItems.append(URLQueryItem(name: "count", value: String(maxCount)))
+        }
+        components.queryItems = queryItems
+
         if let url = components.url {
             getFromNS(url: url) { (result) in
                 switch result {
@@ -251,14 +256,22 @@ public class NightscoutClient {
     }
 
 
-    public func fetchTreatments(dateInterval: DateInterval, maxCount: Int = 50, completion: @escaping (Result<[NightscoutTreatment],NightscoutError>) -> Void) {
+    public func fetchTreatments(dateInterval: DateInterval, maxCount: Int? = nil, completion: @escaping (Result<[NightscoutTreatment],NightscoutError>) -> Void) {
         var components = URLComponents(url: url(for: .treatments)!, resolvingAgainstBaseURL: false)!
-        components.queryItems = [
-            URLQueryItem(name: "find[timestamp][$gte]", value: TimeFormat.timestampStrFromDate(dateInterval.start)),
-            URLQueryItem(name: "find[timestamp][$lte]", value: TimeFormat.timestampStrFromDate(dateInterval.end)),
-            URLQueryItem(name: "count", value: String(maxCount))
+
+        var queryItems: [URLQueryItem] = [
+            URLQueryItem(name: "find[created_at][$gte]", value: TimeFormat.timestampStrFromDate(dateInterval.start)),
+            URLQueryItem(name: "find[created_at][$lte]", value: TimeFormat.timestampStrFromDate(dateInterval.end))
         ]
+
+        if let maxCount {
+            queryItems.append(URLQueryItem(name: "count", value: String(maxCount)))
+        }
+
+        components.queryItems = queryItems
+
         if let url = components.url {
+            print("Treatments url: \(url)")
             getFromNS(url: url) { (result) in
                 switch result {
                 case .failure(let error):
