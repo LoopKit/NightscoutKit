@@ -11,13 +11,13 @@ import Foundation
 public class CarbCorrectionNightscoutTreatment: NightscoutTreatment {
     
     public let carbs: Int
-    let absorptionTime: TimeInterval?
-    let glucose: Int?
-    let units: Units? // of glucose entry
-    let glucoseType: GlucoseType?
-    let foodType: String?
-    let userEnteredAt: Date?
-    let userLastModifiedAt: Date?
+    public let absorptionTime: TimeInterval?
+    public let glucose: Int?
+    public let units: Units? // of glucose entry
+    public let glucoseType: GlucoseType?
+    public let foodType: String?
+    public let userEnteredAt: Date?
+    public let userLastModifiedAt: Date?
 
     public init(timestamp: Date, enteredBy: String, id: String?, carbs: Int, absorptionTime: TimeInterval? = nil, glucose: Int? = nil, glucoseType: GlucoseType? = nil, units: Units? = nil, foodType: String? = nil, notes: String? = nil, syncIdentifier: String? = nil, userEnteredAt: Date? = nil, userLastModifiedAt: Date? = nil) {
         self.carbs = carbs
