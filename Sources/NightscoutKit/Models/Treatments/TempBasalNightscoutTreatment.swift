@@ -22,14 +22,16 @@ public class TempBasalNightscoutTreatment: NightscoutTreatment {
     public let temp: RateType
     public let duration: TimeInterval
     public let automatic: Bool
-    
-    public init(timestamp: Date, enteredBy: String, temp: RateType, rate: Double, absolute: Double?, duration: TimeInterval, amount: Double? = nil, automatic: Bool = true, id: String? = nil, syncIdentifier: String? = nil, insulinType: String?) {
+    public let reason: String?
+
+    public init(timestamp: Date, enteredBy: String, temp: RateType, rate: Double, absolute: Double?, duration: TimeInterval, amount: Double? = nil, automatic: Bool = true, id: String? = nil, syncIdentifier: String? = nil, insulinType: String?, reason: String? = nil) {
         self.rate = rate
         self.absolute = absolute
         self.temp = temp
         self.duration = duration
         self.amount = amount
         self.automatic = automatic
+        self.reason = reason
         
         // Commenting out usage of surrogate ID until supported by Nightscout
         super.init(timestamp: timestamp, enteredBy: enteredBy, id: id, eventType: .tempBasal, syncIdentifier: syncIdentifier, insulinType: insulinType)
@@ -51,6 +53,7 @@ public class TempBasalNightscoutTreatment: NightscoutTreatment {
         self.amount = entry["amount"] as? Double
         self.absolute = entry["absolute"] as? Double
         self.automatic = entry["automatic"] as? Bool ?? true
+        self.reason = entry["reason"] as? String
 
         super.init(entry)
     }
@@ -63,6 +66,7 @@ public class TempBasalNightscoutTreatment: NightscoutTreatment {
         rval["duration"] = duration.minutes
         rval["amount"] = amount
         rval["automatic"] = automatic
+        rval["reason"] = reason
         return rval
     }
 }
