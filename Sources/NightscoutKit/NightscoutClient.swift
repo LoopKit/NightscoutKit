@@ -15,6 +15,7 @@ private enum Endpoint: String {
     case deviceStatus = "/api/v1/devicestatus"
     case authTest = "/api/v1/experiments/test"
     case profile = "/api/v1/profile"
+    case profiles = "/api/v1/profiles"
     case currentProfile = "/api/v1/profile/current"
     case notifications = "/api/v2/notifications/loop"
 }
@@ -181,11 +182,11 @@ public class NightscoutClient {
     }
 
     public func fetchProfiles(dateInterval: DateInterval, maxCount: Int? = nil, completion: @escaping (Result<[ProfileSet],NightscoutError>) -> Void) {
-        var components = URLComponents(url: url(for: .profile)!, resolvingAgainstBaseURL: false)!
+        var components = URLComponents(url: url(for: .profiles)!, resolvingAgainstBaseURL: false)!
 
         var queryItems: [URLQueryItem] = [
-            URLQueryItem(name: "find[dateString][$gte]", value: TimeFormat.timestampStrFromDate(dateInterval.start)),
-            URLQueryItem(name: "find[dateString][$lte]", value: TimeFormat.timestampStrFromDate(dateInterval.end))
+            URLQueryItem(name: "find[startDate][$gte]", value: TimeFormat.timestampStrFromDate(dateInterval.start)),
+            URLQueryItem(name: "find[startDate][$lte]", value: TimeFormat.timestampStrFromDate(dateInterval.end))
         ]
 
         if let maxCount {
