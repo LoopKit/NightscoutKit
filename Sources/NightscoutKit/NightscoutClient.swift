@@ -272,7 +272,6 @@ public class NightscoutClient {
         components.queryItems = queryItems
 
         if let url = components.url {
-            print("Treatments url: \(url)")
             getFromNS(url: url) { (result) in
                 switch result {
                 case .failure(let error):
@@ -311,7 +310,6 @@ public class NightscoutClient {
         components.queryItems = queryItems
 
         if let url = components.url {
-            //print("Fetching \(url)")
             getFromNS(url: url) { (result) in
                 switch result {
                 case .failure(let error):
@@ -669,7 +667,6 @@ public class NightscoutClient {
     }
     
     public func uploadEntries(_ entries: [GlucoseEntry], completion: @escaping (Result<Bool, Error>) -> Void) {
-        print("Uploading \(entries)")
         postToNS(entries.map { $0.dictionaryRepresentation }, endpoint: .entries, completion: completion)
     }
 
