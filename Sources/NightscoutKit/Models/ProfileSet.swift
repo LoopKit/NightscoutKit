@@ -127,8 +127,9 @@ public class ProfileSet {
     public let store: ProfileStore
     public let settings: LoopSettings
     public let syncIdentifier: String
-    
-    public init(startDate: Date, units: String, enteredBy: String, defaultProfile: String, store: ProfileStore, settings: LoopSettings, syncIdentifier: String) {
+    public let isAPNSProduction: Bool?
+
+    public init(startDate: Date, units: String, enteredBy: String, defaultProfile: String, store: ProfileStore, settings: LoopSettings, syncIdentifier: String, isAPNSProduction: Bool? = nil) {
         self.startDate = startDate
         self.units = units
         self.enteredBy = enteredBy
@@ -136,6 +137,7 @@ public class ProfileSet {
         self.store = store
         self.settings = settings
         self.syncIdentifier = syncIdentifier
+        self.isAPNSProduction = isAPNSProduction
     }
     
     public var dictionaryRepresentation: [String: Any] {
@@ -145,7 +147,7 @@ public class ProfileSet {
         let dictProfiles = Dictionary(uniqueKeysWithValues:
             store.map { key, value in (key, value.dictionaryRepresentation) })
         
-        let rval : [String: Any] = [
+        var rval : [String: Any] = [
             "defaultProfile": defaultProfile,
             "startDate": dateFormatter.string(from: startDate),
             "mills": mills,
@@ -154,7 +156,11 @@ public class ProfileSet {
             "loopSettings": settings.dictionaryRepresentation,
             "store": dictProfiles
         ]
-        
+
+        if let isAPNSProduction = isAPNSProduction {
+            rval["isAPNSProduction"] = isAPNSProduction
+        }
+
         return rval
     }
 
@@ -180,5 +186,6 @@ public class ProfileSet {
         self.store = storeRaw.compactMapValues { Profile(rawValue: $0) }
         self.settings = settings
         self.syncIdentifier = syncIdentifier
+        self.isAPNSProduction = rawValue["isAPNSProduction"] as? Bool
     }
 }

@@ -18,4 +18,21 @@ final class NightscoutKitTests: XCTestCase {
 
         XCTAssertEqual("ETC/GMT+5", json["timezone"] as? String)
     }
+
+    private func makeProfileSet(isAPNSProduction: Bool?) -> ProfileSet {
+        let timeZone = TimeZone(secondsFromGMT: 0)!
+        let schedule = [ProfileSet.ScheduleItem(offset: .hours(0), value: 1)]
+        let profile = ProfileSet.Profile(timezone: timeZone, dia: .hours(6), sensitivity: schedule, carbratio: schedule, basal: schedule, targetLow: schedule, targetHigh: schedule, units: "mg/dL")
+        let settings = LoopSettings(dosingEnabled: true, overridePresets: [], scheduleOverride: nil, minimumBGGuard: nil, preMealTargetRange: nil, maximumBasalRatePerHour: nil, maximumBolus: nil, deviceToken: "token", bundleIdentifier: "com.example.loop", dosingStrategy: "automaticBolus")
+        return ProfileSet(startDate: Date(), units: "mg/dL", enteredBy: "Loop", defaultProfile: "Default", store: ["Default": profile], settings: settings, syncIdentifier: "sync", isAPNSProduction: isAPNSProduction)
+    }
+
+    func testAPNSProductionEnvironmentIsSerializedAtTopLevel() {
+        XCTAssertEqual(true, makeProfileSet(isAPNSProduction: true).dictionaryRepresentation["isAPNSProduction"] as? Bool)
+        XCTAssertEqual(false, makeProfileSet(isAPNSProduction: false).dictionaryRepresentation["isAPNSProduction"] as? Bool)
+    }
+
+    func testAPNSProductionEnvironmentOmittedWhenUnset() {
+        XCTAssertNil(makeProfileSet(isAPNSProduction: nil).dictionaryRepresentation["isAPNSProduction"])
+    }
 }
