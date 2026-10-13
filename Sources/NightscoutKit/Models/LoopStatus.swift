@@ -27,8 +27,10 @@ public struct LoopStatus {
     public let currentCorrectionRange: CorrectionRange?
     public let forecastError: ForecastError?
     public let testingDetails: [String: Any]?
+    /// Algorithm experiments in effect for this loop, e.g. ["integralRetrospectiveCorrection": true]
+    public let algorithmExperiments: [String: Any]?
 
-    public init(name: String, version: String, timestamp: Date, iob: IOBStatus? = nil, cob: COBStatus? = nil, predicted: PredictedBG? = nil, automaticDoseRecommendation: AutomaticDoseRecommendation? = nil, recommendedBolus: Double? = nil, enacted: LoopEnacted? = nil, rileylinks: [RileyLinkStatus]? = nil, failureReason: String? = nil, currentCorrectionRange: CorrectionRange? = nil, forecastError: ForecastError? = nil, testingDetails: [String: Any]? = nil) {
+    public init(name: String, version: String, timestamp: Date, iob: IOBStatus? = nil, cob: COBStatus? = nil, predicted: PredictedBG? = nil, automaticDoseRecommendation: AutomaticDoseRecommendation? = nil, recommendedBolus: Double? = nil, enacted: LoopEnacted? = nil, rileylinks: [RileyLinkStatus]? = nil, failureReason: String? = nil, currentCorrectionRange: CorrectionRange? = nil, forecastError: ForecastError? = nil, testingDetails: [String: Any]? = nil, algorithmExperiments: [String: Any]? = nil) {
         self.name = name
         self.version = version
         self.timestamp = timestamp
@@ -43,6 +45,7 @@ public struct LoopStatus {
         self.currentCorrectionRange = currentCorrectionRange
         self.forecastError = forecastError
         self.testingDetails = testingDetails
+        self.algorithmExperiments = algorithmExperiments
     }
     
     public var dictionaryRepresentation: [String: Any] {
@@ -92,6 +95,10 @@ public struct LoopStatus {
             rval["forecastError"] = forecastError.dictionaryRepresentation
         }
         
+        if let algorithmExperiments {
+            rval["algorithmExperiments"] = algorithmExperiments
+        }
+
         if let testingDetails = testingDetails {
             rval["testingDetails"] = testingDetails
         }
@@ -166,6 +173,7 @@ public struct LoopStatus {
         }
 
         testingDetails = rawValue["testingDetails"] as? [String: Any]
+        algorithmExperiments = rawValue["algorithmExperiments"] as? [String: Any]
 
     }
 }
