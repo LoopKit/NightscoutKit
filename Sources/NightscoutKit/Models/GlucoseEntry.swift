@@ -77,6 +77,8 @@ public struct GlucoseEntry {
     public let condition: Condition?
     /// Whether the reading was recovered after a gap (sensor history or backfill) rather than received in real time
     public let isBackfill: Bool?
+    /// When the uploading device received the reading from the CGM
+    public let receivedTime: Date?
 
     public init(
         glucose: Double,
@@ -88,6 +90,7 @@ public struct GlucoseEntry {
         isCalibration: Bool? = false,
         condition: Condition? = nil,
         isBackfill: Bool? = nil,
+        receivedTime: Date? = nil,
         id: String? = nil)
     {
         self.glucose = glucose
@@ -99,6 +102,7 @@ public struct GlucoseEntry {
         self.isCalibration = isCalibration
         self.condition = condition
         self.isBackfill = isBackfill
+        self.receivedTime = receivedTime
         self.id = id
     }
 
@@ -132,6 +136,7 @@ public struct GlucoseEntry {
         representation["trendRate"] = changeRate
         representation["isCalibration"] = isCalibration
         representation["isBackfill"] = isBackfill
+        representation["receivedTime"] = receivedTime.map { TimeFormat.timestampStrFromDate($0) }
 
         return representation
     }
@@ -179,5 +184,6 @@ public struct GlucoseEntry {
         self.changeRate = rawValue["trendRate"] as? Double
         self.isCalibration = rawValue["isCalibration"] as? Bool
         self.isBackfill = rawValue["isBackfill"] as? Bool
+        self.receivedTime = (rawValue["receivedTime"] as? String).flatMap { TimeFormat.dateFromTimestamp($0) }
     }
 }
