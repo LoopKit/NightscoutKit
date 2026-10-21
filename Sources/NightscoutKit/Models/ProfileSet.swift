@@ -128,8 +128,11 @@ public class ProfileSet {
     public let settings: LoopSettings
     public let syncIdentifier: String
     public let isAPNSProduction: Bool?
+    /// The uploader's time zone identifier, e.g. "America/Chicago". The profiles' own
+    /// `timezone` is the fixed offset their schedules use.
+    public let timeZone: String?
 
-    public init(startDate: Date, units: String, enteredBy: String, defaultProfile: String, store: ProfileStore, settings: LoopSettings, syncIdentifier: String, isAPNSProduction: Bool? = nil) {
+    public init(startDate: Date, units: String, enteredBy: String, defaultProfile: String, store: ProfileStore, settings: LoopSettings, syncIdentifier: String, isAPNSProduction: Bool? = nil, timeZone: String? = nil) {
         self.startDate = startDate
         self.units = units
         self.enteredBy = enteredBy
@@ -138,6 +141,7 @@ public class ProfileSet {
         self.settings = settings
         self.syncIdentifier = syncIdentifier
         self.isAPNSProduction = isAPNSProduction
+        self.timeZone = timeZone
     }
     
     public var dictionaryRepresentation: [String: Any] {
@@ -159,6 +163,10 @@ public class ProfileSet {
 
         if let isAPNSProduction = isAPNSProduction {
             rval["isAPNSProduction"] = isAPNSProduction
+        }
+
+        if let timeZone = timeZone {
+            rval["timeZone"] = timeZone
         }
 
         return rval
@@ -187,5 +195,6 @@ public class ProfileSet {
         self.settings = settings
         self.syncIdentifier = syncIdentifier
         self.isAPNSProduction = rawValue["isAPNSProduction"] as? Bool
+        self.timeZone = rawValue["timeZone"] as? String
     }
 }
