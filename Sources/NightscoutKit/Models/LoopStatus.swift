@@ -21,16 +21,19 @@ public struct LoopStatus {
     public let predicted: PredictedBG?
     public let automaticDoseRecommendation: AutomaticDoseRecommendation?
     public let recommendedBolus: Double?
+    public let bolusCalculation: BolusCalculation?
     public let enacted: LoopEnacted?
     public let rileylinks: [RileyLinkStatus]?
     public let failureReason: String?
+    /// The id of the first error, without its details
+    public let failureCode: String?
     public let currentCorrectionRange: CorrectionRange?
     public let forecastError: ForecastError?
     public let testingDetails: [String: Any]?
     /// Algorithm experiments in effect for this loop, each with an "identifier" and optional free-form "parameters"
     public let algorithmExperiments: [[String: Any]]?
 
-    public init(name: String, version: String, timestamp: Date, iob: IOBStatus? = nil, cob: COBStatus? = nil, predicted: PredictedBG? = nil, automaticDoseRecommendation: AutomaticDoseRecommendation? = nil, recommendedBolus: Double? = nil, enacted: LoopEnacted? = nil, rileylinks: [RileyLinkStatus]? = nil, failureReason: String? = nil, currentCorrectionRange: CorrectionRange? = nil, forecastError: ForecastError? = nil, testingDetails: [String: Any]? = nil, algorithmExperiments: [[String: Any]]? = nil) {
+    public init(name: String, version: String, timestamp: Date, iob: IOBStatus? = nil, cob: COBStatus? = nil, predicted: PredictedBG? = nil, automaticDoseRecommendation: AutomaticDoseRecommendation? = nil, recommendedBolus: Double? = nil, bolusCalculation: BolusCalculation? = nil, enacted: LoopEnacted? = nil, rileylinks: [RileyLinkStatus]? = nil, failureReason: String? = nil, failureCode: String? = nil, currentCorrectionRange: CorrectionRange? = nil, forecastError: ForecastError? = nil, testingDetails: [String: Any]? = nil, algorithmExperiments: [[String: Any]]? = nil) {
         self.name = name
         self.version = version
         self.timestamp = timestamp
@@ -39,9 +42,11 @@ public struct LoopStatus {
         self.predicted = predicted
         self.automaticDoseRecommendation = automaticDoseRecommendation
         self.recommendedBolus = recommendedBolus
+        self.bolusCalculation = bolusCalculation
         self.enacted = enacted
         self.rileylinks = rileylinks
         self.failureReason = failureReason
+        self.failureCode = failureCode
         self.currentCorrectionRange = currentCorrectionRange
         self.forecastError = forecastError
         self.testingDetails = testingDetails
@@ -74,6 +79,10 @@ public struct LoopStatus {
         if let recommendedBolus = recommendedBolus {
             rval["recommendedBolus"] = recommendedBolus
         }
+
+        if let bolusCalculation = bolusCalculation {
+            rval["bolusCalculation"] = bolusCalculation.dictionaryRepresentation
+        }
         
         if let enacted = enacted {
             rval["enacted"] = enacted.dictionaryRepresentation
@@ -81,6 +90,10 @@ public struct LoopStatus {
         
         if let failureReason = failureReason {
             rval["failureReason"] = failureReason
+        }
+
+        if let failureCode = failureCode {
+            rval["failureCode"] = failureCode
         }
 
         if let rileylinks = rileylinks {
@@ -145,6 +158,7 @@ public struct LoopStatus {
         }
 
         recommendedBolus = rawValue["recommendedBolus"] as? Double
+        bolusCalculation = (rawValue["bolusCalculation"] as? BolusCalculation.RawValue).flatMap { BolusCalculation(rawValue: $0) }
 
         if let enactedRaw = rawValue["enacted"] as? LoopEnacted.RawValue {
             enacted = LoopEnacted(rawValue: enactedRaw)
@@ -159,6 +173,7 @@ public struct LoopStatus {
         }
 
         failureReason = rawValue["failureReason"] as? String
+        failureCode = rawValue["failureCode"] as? String
 
         if let currentCorrectionRangeRaw = rawValue["currentCorrectionRange"] as? CorrectionRange.RawValue {
             currentCorrectionRange = CorrectionRange(rawValue: currentCorrectionRangeRaw)

@@ -14,8 +14,10 @@ public struct UploaderStatus {
     public let name: String
     public let timestamp: Date
     public let isCharging: Bool?
+    /// The uploader's time zone identifier, e.g. "America/Chicago"
+    public let timeZone: String?
 
-    public init(name: String, timestamp: Date, battery: Float? = nil, isCharging: Bool? = nil) {
+    public init(name: String, timestamp: Date, battery: Float? = nil, isCharging: Bool? = nil, timeZone: String? = nil) {
         let intBattery: Int?
         if let battery = battery , battery >= 0 {
             intBattery = Int(battery * 100)
@@ -23,14 +25,15 @@ public struct UploaderStatus {
             intBattery = nil
         }
 
-        self.init(name: name, timestamp: timestamp, battery: intBattery, isCharging: isCharging)
+        self.init(name: name, timestamp: timestamp, battery: intBattery, isCharging: isCharging, timeZone: timeZone)
     }
 
-    public init(name: String, timestamp: Date, battery: Int? = nil, isCharging: Bool? = nil) {
+    public init(name: String, timestamp: Date, battery: Int? = nil, isCharging: Bool? = nil, timeZone: String? = nil) {
         self.name = name
         self.timestamp = timestamp
         self.battery = battery
         self.isCharging = isCharging
+        self.timeZone = timeZone
     }
     
     public var dictionaryRepresentation: [String: Any] {
@@ -45,6 +48,10 @@ public struct UploaderStatus {
 
         if let isCharging = isCharging {
             rval["isCharging"] = isCharging
+        }
+
+        if let timeZone = timeZone {
+            rval["timeZone"] = timeZone
         }
 
         return rval
