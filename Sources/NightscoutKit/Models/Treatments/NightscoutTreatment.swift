@@ -24,6 +24,7 @@ public enum TreatmentType: String {
     case note = "Note"
     case sensorStart = "Sensor Start"
     case siteChange = "Site Change"
+    case profileSwitch = "Profile Switch"
 
     public var classType: NightscoutTreatment.Type {
         switch self {
@@ -41,6 +42,8 @@ public enum TreatmentType: String {
             return BGCheckNightscoutTreatment.self
         case .note:
             return NoteNightscoutTreatment.self
+        case .profileSwitch:
+            return ProfileSwitchNightscoutTreatment.self
         default:
             return NightscoutTreatment.self
         }

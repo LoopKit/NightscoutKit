@@ -16,7 +16,7 @@ fileprivate let reverseTimeZoneMap = timeZoneMap.reduce(into: [String: String]()
 }
 
 public class ProfileSet {
-    typealias RawValue = [String: Any]
+    public typealias RawValue = [String: Any]
 
     public typealias ProfileStore = [String: Profile]
     typealias ProfileStoreRawValue = [String: Profile.RawValue]
@@ -44,14 +44,23 @@ public class ProfileSet {
 
         init?(rawValue: RawValue) {
             guard
-                let timeAsSeconds = rawValue["timeAsSeconds"] as? Double,
+                let offset = (rawValue["timeAsSeconds"] as? Double) ?? (rawValue["time"] as? String).flatMap(Self.offset(fromTime:)),
                 let value = rawValue["value"] as? Double
             else {
                 return nil
             }
 
-            self.offset = TimeInterval(timeAsSeconds)
+            self.offset = offset
             self.value = value
+        }
+
+        /// The offset of an "HH:mm" time.
+        private static func offset(fromTime time: String) -> TimeInterval? {
+            let parts = time.split(separator: ":")
+            guard parts.count == 2, let hours = Int(parts[0]), let minutes = Int(parts[1]) else {
+                return nil
+            }
+            return TimeInterval(hours: Double(hours)) + TimeInterval(minutes: Double(minutes))
         }
     }
     
@@ -97,8 +106,7 @@ public class ProfileSet {
         init?(rawValue: RawValue) {
             guard
                 let nsTimezoneIdentifier = rawValue["timezone"] as? String,
-                let timeZoneIdentifier = reverseTimeZoneMap[nsTimezoneIdentifier],
-                let timeZone = TimeZone(identifier: timeZoneIdentifier),
+                let timeZone = TimeZone(identifier: reverseTimeZoneMap[nsTimezoneIdentifier] ?? nsTimezoneIdentifier),
                 let diaHours = rawValue["dia"] as? Double,
                 let sensitivityRaw = rawValue["sens"] as? [ScheduleItem.RawValue],
                 let carbratioRaw = rawValue["carbratio"] as? [ScheduleItem.RawValue],
@@ -125,14 +133,23 @@ public class ProfileSet {
     public let enteredBy: String
     public let defaultProfile: String
     public let store: ProfileStore
-    public let settings: LoopSettings
+    /// Loop's settings, or nil for a profile set another uploader wrote.
+    public let settings: LoopSettings?
     public let syncIdentifier: String
     public let isAPNSProduction: Bool?
     /// The uploader's time zone identifier, e.g. "America/Chicago". The profiles' own
     /// `timezone` is the fixed offset their schedules use.
     public let timeZone: String?
+    /// The bounds a remote editor of the store's profiles must keep to.
+    public let profileEditLimits: ProfileEditLimits?
+    /// The remote commands the uploader accepts for the store's profiles, e.g. "profile-switch".
+    public let remoteCommands: [String]?
+    /// The weekly starts of the store's profiles.
+    public let scheduledSwitches: [ScheduledSwitch]?
+    /// The fingerprint of `scheduledSwitches` that a remote editor of the list sends back.
+    public let scheduledSwitchesFingerprint: String?
 
-    public init(startDate: Date, units: String, enteredBy: String, defaultProfile: String, store: ProfileStore, settings: LoopSettings, syncIdentifier: String, isAPNSProduction: Bool? = nil, timeZone: String? = nil) {
+    public init(startDate: Date, units: String, enteredBy: String, defaultProfile: String, store: ProfileStore, settings: LoopSettings?, syncIdentifier: String, isAPNSProduction: Bool? = nil, timeZone: String? = nil, profileEditLimits: ProfileEditLimits? = nil, remoteCommands: [String]? = nil, scheduledSwitches: [ScheduledSwitch]? = nil, scheduledSwitchesFingerprint: String? = nil) {
         self.startDate = startDate
         self.units = units
         self.enteredBy = enteredBy
@@ -142,6 +159,10 @@ public class ProfileSet {
         self.syncIdentifier = syncIdentifier
         self.isAPNSProduction = isAPNSProduction
         self.timeZone = timeZone
+        self.profileEditLimits = profileEditLimits
+        self.remoteCommands = remoteCommands
+        self.scheduledSwitches = scheduledSwitches
+        self.scheduledSwitchesFingerprint = scheduledSwitchesFingerprint
     }
     
     public var dictionaryRepresentation: [String: Any] {
@@ -157,9 +178,12 @@ public class ProfileSet {
             "mills": mills,
             "units": units,
             "enteredBy": enteredBy,
-            "loopSettings": settings.dictionaryRepresentation,
             "store": dictProfiles
         ]
+
+        if let settings = settings {
+            rval["loopSettings"] = settings.dictionaryRepresentation
+        }
 
         if let isAPNSProduction = isAPNSProduction {
             rval["isAPNSProduction"] = isAPNSProduction
@@ -169,10 +193,26 @@ public class ProfileSet {
             rval["timeZone"] = timeZone
         }
 
+        if let profileEditLimits = profileEditLimits {
+            rval["profileEditLimits"] = profileEditLimits.dictionaryRepresentation
+        }
+
+        if let remoteCommands = remoteCommands {
+            rval["remoteCommands"] = remoteCommands
+        }
+
+        if let scheduledSwitches = scheduledSwitches {
+            rval["scheduledSwitches"] = scheduledSwitches.map(\.dictionaryRepresentation)
+        }
+
+        if let scheduledSwitchesFingerprint = scheduledSwitchesFingerprint {
+            rval["scheduledSwitchesFingerprint"] = scheduledSwitchesFingerprint
+        }
+
         return rval
     }
 
-    init?(rawValue: RawValue) {
+    public init?(rawValue: RawValue) {
         guard
             let startDateStr = rawValue["startDate"] as? String,
             let startDate = TimeFormat.dateFromTimestamp(startDateStr),
@@ -180,8 +220,6 @@ public class ProfileSet {
             let enteredBy = rawValue["enteredBy"] as? String,
             let defaultProfile = rawValue["defaultProfile"] as? String,
             let storeRaw = rawValue["store"] as? ProfileStoreRawValue,
-            let settingsRaw = rawValue["loopSettings"] as? LoopSettings.RawValue,
-            let settings = LoopSettings(rawValue: settingsRaw),
             let syncIdentifier = rawValue["_id"] as? String
         else {
             return nil
@@ -192,9 +230,65 @@ public class ProfileSet {
         self.enteredBy = enteredBy
         self.defaultProfile = defaultProfile
         self.store = storeRaw.compactMapValues { Profile(rawValue: $0) }
-        self.settings = settings
+        self.settings = (rawValue["loopSettings"] as? LoopSettings.RawValue).flatMap { LoopSettings(rawValue: $0) }
         self.syncIdentifier = syncIdentifier
         self.isAPNSProduction = rawValue["isAPNSProduction"] as? Bool
         self.timeZone = rawValue["timeZone"] as? String
+        self.profileEditLimits = (rawValue["profileEditLimits"] as? ProfileEditLimits.RawValue).flatMap { ProfileEditLimits(rawValue: $0) }
+        self.remoteCommands = rawValue["remoteCommands"] as? [String]
+        self.scheduledSwitches = (rawValue["scheduledSwitches"] as? [ScheduledSwitch.RawValue])?.compactMap { ScheduledSwitch(rawValue: $0) }
+        self.scheduledSwitchesFingerprint = rawValue["scheduledSwitchesFingerprint"] as? String
+    }
+}
+
+extension ProfileSet {
+    /// A weekly start of the store profile named `profile`, `time` seconds after midnight in the profiles' time zone
+    /// on `weekday` (1–7, Sunday = 1). It stays active until the next start.
+    public struct ScheduledSwitch: Equatable {
+        typealias RawValue = [String: Any]
+
+        public let id: String
+        public let profile: String
+        public let weekday: Int
+        public let time: Int
+        /// A paused start does not run.
+        public let paused: Bool
+
+        public init(id: String, profile: String, weekday: Int, time: Int, paused: Bool = false) {
+            self.id = id
+            self.profile = profile
+            self.weekday = weekday
+            self.time = time
+            self.paused = paused
+        }
+
+        public var dictionaryRepresentation: [String: Any] {
+            var rval: [String: Any] = [
+                "id": id,
+                "profile": profile,
+                "weekday": weekday,
+                "time": time,
+            ]
+            if paused {
+                rval["paused"] = true
+            }
+            return rval
+        }
+
+        init?(rawValue: RawValue) {
+            guard
+                let id = rawValue["id"] as? String,
+                let profile = rawValue["profile"] as? String,
+                let weekday = rawValue["weekday"] as? Int,
+                let time = rawValue["time"] as? Int
+            else {
+                return nil
+            }
+            self.id = id
+            self.profile = profile
+            self.weekday = weekday
+            self.time = time
+            self.paused = rawValue["paused"] as? Bool ?? false
+        }
     }
 }
