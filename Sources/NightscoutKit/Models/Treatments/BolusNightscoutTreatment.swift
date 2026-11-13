@@ -22,14 +22,17 @@ public class BolusNightscoutTreatment: NightscoutTreatment {
     public let unabsorbed: Double?
     public let duration: TimeInterval
     public let automatic: Bool
+    /// Machine-readable origin of a non-automatic bolus (e.g. "remote", "watch", "manual", "shortcut"), or nil.
+    public let bolusOrigin: String?
 
-    public init(timestamp: Date, enteredBy: String, bolusType: BolusType, amount: Double, programmed: Double, unabsorbed: Double, duration: TimeInterval, automatic: Bool, notes: String? = nil, id: String? = nil, syncIdentifier: String? = nil, insulinType: String?) {
+    public init(timestamp: Date, enteredBy: String, bolusType: BolusType, amount: Double, programmed: Double, unabsorbed: Double, duration: TimeInterval, automatic: Bool, notes: String? = nil, id: String? = nil, syncIdentifier: String? = nil, insulinType: String?, bolusOrigin: String? = nil) {
         self.bolusType = bolusType
         self.amount = amount
         self.programmed = programmed
         self.unabsorbed = unabsorbed
         self.duration = duration
         self.automatic = automatic
+        self.bolusOrigin = bolusOrigin
         super.init(timestamp: timestamp, enteredBy: enteredBy, notes: notes, id: id, eventType: .correctionBolus, syncIdentifier: syncIdentifier, insulinType: insulinType)
     }
 
@@ -50,6 +53,7 @@ public class BolusNightscoutTreatment: NightscoutTreatment {
         self.duration = TimeInterval(minutes: durationMinutes)
         self.unabsorbed = entry["unabsorbed"] as? Double
         self.automatic = entry["automatic"] as? Bool ?? false
+        self.bolusOrigin = entry["bolusOrigin"] as? String
         super.init(entry)
      }
 
@@ -61,6 +65,7 @@ public class BolusNightscoutTreatment: NightscoutTreatment {
         rval["unabsorbed"] = unabsorbed
         rval["duration"] = duration.minutes
         rval["automatic"] = automatic
+        rval["bolusOrigin"] = bolusOrigin
         return rval
     }
 }
