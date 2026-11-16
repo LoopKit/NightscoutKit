@@ -32,8 +32,10 @@ public struct LoopStatus {
     public let testingDetails: [String: Any]?
     /// Algorithm experiments in effect for this loop, each with an "identifier" and optional free-form "parameters"
     public let algorithmExperiments: [[String: Any]]?
+    /// Build running on the controller: version, buildNumber, workspaceBranch, workspaceRevision, buildDate
+    public let build: [String: String]?
 
-    public init(name: String, version: String, timestamp: Date, iob: IOBStatus? = nil, cob: COBStatus? = nil, predicted: PredictedBG? = nil, automaticDoseRecommendation: AutomaticDoseRecommendation? = nil, recommendedBolus: Double? = nil, bolusCalculation: BolusCalculation? = nil, enacted: LoopEnacted? = nil, rileylinks: [RileyLinkStatus]? = nil, failureReason: String? = nil, failureCode: String? = nil, currentCorrectionRange: CorrectionRange? = nil, forecastError: ForecastError? = nil, testingDetails: [String: Any]? = nil, algorithmExperiments: [[String: Any]]? = nil) {
+    public init(name: String, version: String, timestamp: Date, iob: IOBStatus? = nil, cob: COBStatus? = nil, predicted: PredictedBG? = nil, automaticDoseRecommendation: AutomaticDoseRecommendation? = nil, recommendedBolus: Double? = nil, bolusCalculation: BolusCalculation? = nil, enacted: LoopEnacted? = nil, rileylinks: [RileyLinkStatus]? = nil, failureReason: String? = nil, failureCode: String? = nil, currentCorrectionRange: CorrectionRange? = nil, forecastError: ForecastError? = nil, testingDetails: [String: Any]? = nil, algorithmExperiments: [[String: Any]]? = nil, build: [String: String]? = nil) {
         self.name = name
         self.version = version
         self.timestamp = timestamp
@@ -51,6 +53,7 @@ public struct LoopStatus {
         self.forecastError = forecastError
         self.testingDetails = testingDetails
         self.algorithmExperiments = algorithmExperiments
+        self.build = build
     }
     
     public var dictionaryRepresentation: [String: Any] {
@@ -114,6 +117,10 @@ public struct LoopStatus {
 
         if let testingDetails = testingDetails {
             rval["testingDetails"] = testingDetails
+        }
+
+        if let build = build {
+            rval["build"] = build
         }
 
         return rval
@@ -189,6 +196,7 @@ public struct LoopStatus {
 
         testingDetails = rawValue["testingDetails"] as? [String: Any]
         algorithmExperiments = rawValue["algorithmExperiments"] as? [[String: Any]]
+        build = rawValue["build"] as? [String: String]
 
     }
 }
