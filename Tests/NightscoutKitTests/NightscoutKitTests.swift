@@ -67,4 +67,17 @@ final class NightscoutKitTests: XCTestCase {
         XCTAssertEqual("pumpDataTooOld", json["failureCode"] as? String)
         XCTAssertEqual("pumpDataTooOld", LoopStatus(rawValue: json)?.failureCode)
     }
+
+    func testExerciseTreatmentRoundTrip() {
+        let treatment = ExerciseNightscoutTreatment(timestamp: Date(timeIntervalSince1970: 1_700_000_000), enteredBy: "Loop", duration: .minutes(45), notes: "Running", syncIdentifier: "abc")
+        var json = treatment.dictionaryRepresentation
+        XCTAssertEqual("Exercise", json["eventType"] as? String)
+        XCTAssertEqual(45, json["duration"] as? Double)
+
+        json["_id"] = "1"
+        let decoded = NightscoutTreatment.fromServer(json) as? ExerciseNightscoutTreatment
+        XCTAssertEqual(.minutes(45), decoded?.duration)
+        XCTAssertEqual("Running", decoded?.notes)
+        XCTAssertEqual("abc", decoded?.syncIdentifier)
+    }
 }
